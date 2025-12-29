@@ -41,7 +41,7 @@ public class SendEmail {
 	public void sendEmailPerson (String mail, String subject, String message) throws MailException{
 		SimpleMailMessage messageMail = new SimpleMailMessage();
 		messageMail.setTo(mail);
-		messageMail.setFrom("danieltoledo1004@gmail.com");
+		messageMail.setFrom("");
 		messageMail.setSubject(subject);
 		messageMail.setText(message);
 		
