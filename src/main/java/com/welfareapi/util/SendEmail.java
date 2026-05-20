@@ -1,16 +1,12 @@
 package com.welfareapi.util;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-
-@Service
-public class SendEmail {
-	
-	
 	/**
 	 * Passos para configurar o uma conta do gmail para funcionar a autenticação
 	 * acesse no email gmail, as configurações de encaminhamento POP/IMAP
@@ -29,64 +25,25 @@ public class SendEmail {
 	 * 
 	 * E pronto! agora basta utilizar o email para envio!
 	 * */
-	
-	private JavaMailSender javaMailSender;
-	
-	
-	@Autowired
-	public SendEmail (JavaMailSender javaMailSender) {
-		this.javaMailSender = javaMailSender;
+
+
+	@Service // Indica que esta classe contém lógica de serviço (negócio).
+	public class SendEmail {
+
+		@Autowired // Injeta o motor de envio de e-mails do Spring.
+		private JavaMailSender javaMailSender;
+
+		@Value("${spring.mail.username}") // Pega o e-mail configurado no seu application.properties automaticamente.
+		private String emailRemetente;
+
+		public void send(String mail, String subject, String message) throws MailException {
+			SimpleMailMessage messageMail = new SimpleMailMessage();
+
+			messageMail.setTo(mail);           // E-mail do destinatário.
+			messageMail.setFrom(emailRemetente); // Usa o seu e-mail configurado como remetente.
+			messageMail.setSubject(subject);    // Assunto da mensagem.
+			messageMail.setText(message);       // Conteúdo do texto.
+
+			javaMailSender.send(messageMail);   // Executa o envio real.
+		}
 	}
-	
-	public void sendEmailPerson (String mail, String subject, String message) throws MailException{
-		SimpleMailMessage messageMail = new SimpleMailMessage();
-		messageMail.setTo(mail);
-		messageMail.setFrom("");
-		messageMail.setSubject(subject);
-		messageMail.setText(message);
-		
-		
-		javaMailSender.send(messageMail);
-	}
-	
-	public SendEmail(String subject, String message) {
-		super();
-	}
-}
-
-
-/*
- * 
- * import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.MailSender;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
-
-@RestController
-public class EmailController {
-
-    @Autowired private JavaMailSender mailSender;
-
-    @RequestMapping(path = "/email-send", method = RequestMethod.GET)
-    public String sendMail() {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setText("Hello from Spring Boot Application");
-        message.setTo("wolmirgarbin@gmail.com");
-        message.setFrom("wolmirgarbin@gmail.com");
-
-        try {
-            mailSender.send(message);
-            return "Email enviado com sucesso!";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Erro ao enviar email.";
-        }
-    }
-}
- * 
- * 
- * 
- * **/

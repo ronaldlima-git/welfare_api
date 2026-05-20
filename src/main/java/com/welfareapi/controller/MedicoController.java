@@ -7,31 +7,21 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.welfareapi.dao.MedicoDao;
 import com.welfareapi.model.Medico;
 
-@RestController
-@Controller
-@ResponseBody
-@RequestMapping("/medico")
+@RestController //Já inclui o @Controller e @ResponseBody. Indica que é API Rest
+@RequestMapping("/medico") //Define a rota base para todos os métodos desta classe
 public class MedicoController {
-	@Autowired
+	@Autowired //Injeção de Dependência: O Spring gerencia a criação do objeto DAO
 	private MedicoDao medicoDao;
 	
-	@GetMapping
+	@GetMapping //Mapeia requisições Http Get para listar todos os registros
 	public List<Medico> list (){
 		return medicoDao.findAll();
-	}
+	}//Retorna a lista direto do Banco
 	
 	@GetMapping("/{id}")
 	public ResponseEntity<Medico> find (@PathVariable int id){
@@ -40,13 +30,16 @@ public class MedicoController {
 				.orElse(ResponseEntity.notFound().build());
 	}
 	
-	@PostMapping
+	@PostMapping //Mapeia requisições Http POST para inserir novos registros
 	public Medico insert (@Valid @RequestBody Medico medico){
 		return medicoDao.save(medico);
 	}
+	// @Valid: valida as regras das @Entities (como @NotNull).
+	// @RequestBody: transforma o JSON que vem do Postman em um objeto Java.
+
 	
 	@PutMapping("/{id}")
-	public ResponseEntity<Medico> update (@PathVariable("id") int id, @Valid @RequestBody Medico medico){
+	public ResponseEntity<Medico> update (@PathVariable int id, @Valid @RequestBody Medico medico){
 		return medicoDao.findById(id)
 				.map(record ->{
 					record.setNomeMedico(medico.getNomeMedico());
@@ -60,7 +53,7 @@ public class MedicoController {
 	public ResponseEntity<?> delete (@PathVariable int id){
 		return medicoDao.findById(id)
 				.map(record ->{
-					medicoDao.deleteById(id);
+					medicoDao.delete(record);
 					return ResponseEntity.noContent().build();
 				}).orElse(ResponseEntity.notFound().build());
 	}

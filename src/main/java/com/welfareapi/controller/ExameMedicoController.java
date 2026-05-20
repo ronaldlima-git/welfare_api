@@ -1,13 +1,7 @@
 package com.welfareapi.controller;
 
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import com.welfareapi.model.ConsultaMedica;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -22,8 +16,6 @@ import com.welfareapi.dao.ExameMedicoDao;
 import com.welfareapi.model.ExameMedico;
 
 @RestController
-@Controller
-@ResponseBody
 @RequestMapping("/exame")
 public class ExameMedicoController {
 	
@@ -34,14 +26,21 @@ public class ExameMedicoController {
 	public List<ExameMedico> list (){
 		return exameDao.findAll();
 	}
-	
+
 	@GetMapping("/{id}")
 	public ResponseEntity<ExameMedico> find (@PathVariable int id){
 		return exameDao.findById(id)
 				.map(record -> ResponseEntity.ok().body(record))
 				.orElse(ResponseEntity.notFound().build());
 	}
-	
+
+	// Busca exames de uma consulta específica
+	@GetMapping("/consulta/{id}")
+	public List<ConsultaMedica> listPorConsulta(@PathVariable int id) {
+
+		return exameDao.getByExamesConsulta(id);
+	}
+
 	@PostMapping
 	public ExameMedico insert (@Valid @RequestBody ExameMedico exameMedico) {
 		return exameDao.save(exameMedico);

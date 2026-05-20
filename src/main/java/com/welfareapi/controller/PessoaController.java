@@ -16,21 +16,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailException;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@Controller
-@ResponseBody
-@RequestMapping("/pessoa")
+@RequestMapping("/pessoa")//Rota Base
 public class PessoaController {
 	
 	private Logger logger = LoggerFactory.getLogger(PessoaController.class);
@@ -38,8 +28,7 @@ public class PessoaController {
 	//Objeto de PessoaDao
     @Autowired
     private PessoaDao pessoaDao;
-    
-    
+
     @Autowired
     private SendEmail sendMail;
     
@@ -66,18 +55,18 @@ public class PessoaController {
     //Criando uma nova pessoa
     @PostMapping
     public ResponseEntity<Pessoa> insert (@Valid @RequestBody Pessoa pessoa) {
-    	List<Pessoa> pessoas = pessoaDao.findAll();
-    	for (Pessoa pessoa2 : pessoas) {
-			if(pessoa.getEmail().equals(pessoa2.getEmail())) {
-				return ResponseEntity.badRequest().build();
-			}
-		}
+    	List<Pessoa> busca = pessoaDao.listFindByEmail(pessoa.getEmail());//Procura a pessoa através do email
+
+        //Se a lista não vier vazia, é sinal de que o email já existe (Retorna o erro 400)
+        if(!busca.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
         return ResponseEntity.ok().body(pessoaDao.save(pessoa));
     }
     
-    //criando um token para recuperar senha
+    //Criando um token para recuperar senha
     @PostMapping("/token")
-    public ResponseEntity<Pessoa> token (@PathParam("email") String email) {
+    public ResponseEntity<Pessoa> token (@RequestParam("email") String email) {
     	long tokenLong = (long) (100000 + Math.random() * 899999l);
     	
     	List<Pessoa> pessoas = pessoaDao.listFindByEmail(email);
@@ -86,31 +75,29 @@ public class PessoaController {
     		return ResponseEntity.notFound().build();
     	}else {
     		Pessoa pessoa = pessoas.get(0);
-    		System.out.println("Dados{" + pessoa.toString() + "}");
+    		// System.out.println("Dados{" + pessoa.toString() + "}");
     		
     		try {
     			String subject = "Recuperação de Senha WelFare";
         		String message = "Olá, " + pessoa.getNome() + " o token de recuperação de senha é " + tokenLong;
-    			sendMail.sendEmailPerson(pessoa.getEmail(), subject, message);
+    			sendMail.send(pessoa.getEmail(), subject, message);
+
+                //Atualiza o token no banco
+                pessoa.setToken(String.valueOf(tokenLong));
+                pessoaDao.save(pessoa);
     			
-    			return pessoaDao.findById(pessoa.getIdPessoa())
-    					.map(record ->{
-    						record.setToken(String.valueOf(tokenLong));
-    						return ResponseEntity.ok().body(pessoaDao.save(record));
-    					}).orElse(ResponseEntity.notFound().build());
+    		return ResponseEntity.ok().body(pessoa);
+
     		}catch (MailException e) {
-    			logger.info("Error Sending Email: " + e.getMessage());
+    			logger.error("Erro ao enviar o email: " + e.getMessage());
     			return ResponseEntity.badRequest().build();
     		}
-			
-    		
-    		
     	}
     }
     
-    @GetMapping("/login")
-    public ResponseEntity<Pessoa> login (@Param(value = "email") String email, @Param(value = "senha") String senha){
-    	System.out.println();
+    @PostMapping("/login")
+    public ResponseEntity<Pessoa> login (@RequestParam String email, @RequestParam String senha){
+    	//System.out.println();
     	Pessoa pessoa = pessoaDao.login(email, senha);
     	if(pessoa != null) {
     		return ResponseEntity.ok().body(pessoa);

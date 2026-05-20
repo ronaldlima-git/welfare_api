@@ -1,24 +1,23 @@
 package com.welfareapi.model;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ForeignKey;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import javax.persistence.*;
+
 import javax.validation.constraints.NotNull;
 
 
 @Entity
 @Table(name = "pessoa")
+@EntityListeners(AuditingEntityListener.class)
+@SQLDelete(sql = "UPDATE pessoas SET ativo = false WHERE id_pessoa = ?")//Soft Delete
+@Where(clause = "ativo = true") //Filtra apenas as pessoas ativas nas consultas
 public class Pessoa {
     //Atributos
     @Id
@@ -31,15 +30,15 @@ public class Pessoa {
     private String nome;
     
     @NotNull
-    @Column(name = "email", length = 60)
+    @Column(name = "email", length = 60, unique = true)
     private String email;
     
     @NotNull
-    @Column(name = "senha", length = 60)
+    @Column(name = "senha", length = 255)
     private String senha;
 
     @NotNull
-    @Column(name = "cpf", length = 14)
+    @Column(name = "cpf", length = 14, unique = true)
     private String cpf;
     
     @NotNull
@@ -49,6 +48,16 @@ public class Pessoa {
     
     @Column(name = "token")
     private String token;
+
+	@Column(name = "ativo")
+	private boolean ativo = true;
+
+	@CreatedDate
+	@Column(updatable = false)
+	private Date dataCriacao;
+
+	@LastModifiedDate
+	private Date dataUltimaAtualização;
         
     @NotNull
     @ManyToOne(fetch = FetchType.EAGER)
