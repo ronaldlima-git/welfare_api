@@ -21,8 +21,6 @@ import com.welfareapi.dao.ConsultaMedicaDao;
 import com.welfareapi.model.ConsultaMedica;
 
 @RestController
-@Controller
-@ResponseBody
 @RequestMapping("/consulta")
 public class ConsultaMedicaController {
 	
